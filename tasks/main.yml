@@ -1,0 +1,29 @@
+#install docker should be satisfied
+- name: cp hyperkube 1.2.6
+  copy: src=hyperkube dest=/usr/bin/hyperkube
+- name: mkdir /etc/kubernetes/manifests
+  shell: mkdir -p /etc/kubernetes/manifests
+- name: cp kubelet supervisor conf
+  template: src=kubelet_supervisor.conf dest=/etc/supervisor.d/kubelet_supervisor.conf
+- name: supervisor update
+  shell: supervisorctl update
+- name: cp etcd.yml
+  template: src=etcd.yaml dest=/etc/kubernetes/manifests/etcd.yml
+- name: cp k8s-apiserver
+  template: src=kube-apiserver dest=/etc/kubernetes/manifests/kube-apiserver.yml
+- name: cp k8s-scheduler
+  template: src=kube-scheduler dest=/etc/kubernetes/manifests/kube-scheduler.yml
+- name: cp k8s-cm
+  template: src=control-manager dest=/etc/kubernetes/manifests/kube-controller-manager.yml
+#proxy is job on node, next
+#- name: run proxy
+- name: ensure etcd start
+  wait_for: host={{ inventory_hostname }} port=2380
+- name: ensure apiserver startup
+  wait_for: host={{ inventory_hostname }} port=8080
+  delegate_to: localhost
+- name: copy kube-system namespace yaml
+  template: src=kube-system.yml dest={{ansible_env.HOME}}/kube-system.yml
+- name: create kube-system namespace
+  shell: hyperkube kubectl create -f {{ansible_env.HOME}}/kube-system.yml
+  ignore_errors: yes
