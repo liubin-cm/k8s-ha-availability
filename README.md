@@ -40,8 +40,3 @@ License
 -------
 
 MIT
-
-Author Information
-------------------
-
-This role was created in 2016 by [Juwai Limited](http://www.juwai.com).
